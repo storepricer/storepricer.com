@@ -25,8 +25,9 @@
 <header class="nav nav--dark stick" id="stick">
   <div class="wrap nav-row">
     <a class="brand" href="#top"><svg aria-hidden="true"><use href="#mark"/></svg><b>StorePricer</b></a>
-    <nav class="nav-links" aria-label="Page"><a href="#ranking">Ranked Pricing</a><a href="#how">How it works</a><a href="#controls">Price Controls</a><a href="#smart">Smart Selling</a></nav>
+    <nav class="nav-links" id="links" aria-label="Page"><a href="#ranking">Ranked Pricing</a><a href="#how">How it works</a><a href="#controls">Price Controls</a><a href="#smart">Smart Selling</a><a class="btn btn-copper mcta" href="#waitlist">Join the waitlist</a></nav>
     <a class="btn btn-copper btn-sm" href="#waitlist">Join the waitlist</a>
+    <button class="menu" id="menu" type="button" aria-expanded="false" aria-controls="links" aria-label="Menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="b3" d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path class="x" d="M4.5 4.5l11 11M15.5 4.5l-11 11" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
   </div>
 </header>
 <main id="main">
@@ -56,7 +57,7 @@
         <div><span class="n num cu" id="top-nRep"></span><small>prices updated</small></div>
         <div><span class="n num">0</span><small>changed by hand</small></div>
       </div>
-      <p class="hint" id="top-hint"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l10 6.2-4.3 1.1 2.6 5-1.9 1-2.6-5L5 14.5z" fill="currentColor"/></svg>Point at any row. Drag to scroll.</p>
+      <p class="hint" id="top-hint" data-touch="Tap any row."><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l10 6.2-4.3 1.1 2.6 5-1.9 1-2.6-5L5 14.5z" fill="currentColor"/></svg>Point at any row. Drag to scroll.</p>
     </div>
     <div class="card" id="top-card" aria-hidden="true"></div>
     <p class="fn fn-hero">Product names are used for illustration. Prices and costs are examples.</p>
@@ -90,7 +91,7 @@
         <div class="card" id="why-card" aria-hidden="true"></div>
       </div>
     </div>
-    <p class="hint" id="why-hint"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l10 6.2-4.3 1.1 2.6 5-1.9 1-2.6-5L5 14.5z" fill="currentColor"/></svg>Point at any price.</p><p class="fn">Product names are used for illustration. Prices and costs are examples.</p>
+    <p class="hint" id="why-hint" data-touch="Tap any price."><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l10 6.2-4.3 1.1 2.6 5-1.9 1-2.6-5L5 14.5z" fill="currentColor"/></svg>Point at any price.</p><p class="fn">Product names are used for illustration. Prices and costs are examples.</p>
   </div>
 </section>
 </div>
@@ -176,7 +177,7 @@
     <p class="lede" data-f>Real StorePricer screens shown for a sample store. They’re what you’d expect to see in a typical week.</p>
   </div>
   <div class="strip" id="how-strip" data-f><div class="track" id="how-track"></div><div class="edgeL"></div><div class="edgeR"></div></div>
-  <div class="wrap"><p class="hint" data-f><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l10 6.2-4.3 1.1 2.6 5-1.9 1-2.6-5L5 14.5z" fill="currentColor"/></svg>Drag or swipe. Click screens to open them.</p><p class="fn">Product names are used for illustration. Prices and costs are examples.</p></div>
+  <div class="wrap"><p class="hint" data-f data-touch="Swipe. Tap screens to open them."><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l10 6.2-4.3 1.1 2.6 5-1.9 1-2.6-5L5 14.5z" fill="currentColor"/></svg>Drag or swipe. Click screens to open them.</p><p class="fn">Product names are used for illustration. Prices and costs are examples.</p></div>
 </section>
 <div class="lb" id="how-lb" role="dialog" aria-modal="true" aria-label="App screen">
   <div class="lbw"><div class="lbi" id="how-lbi"></div><div class="side" id="how-side"></div></div>

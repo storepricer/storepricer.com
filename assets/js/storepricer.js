@@ -251,7 +251,14 @@
     Promise.race([fontsIn, new Promise(r => setTimeout(r, 1500))]).then(startWhenSeen);
   }
 
-  window.HC = { odo, q, clamp, seg, lerp, ease, fmt, money, end99, round2, rng, PLANS, ITEMS, SONARA, catalog, makeRow, makeStore, put, run };
+  // touch screens: a hint with data-touch says tap and swipe instead of point and click
+  const touch = matchMedia('(hover: none)').matches || q.get('touch') === '1';
+  if (touch) document.querySelectorAll('[data-touch]').forEach(el => {
+    const n = [...el.childNodes].reverse().find(x => x.nodeType === 3 && x.textContent.trim());
+    if (n) n.textContent = el.dataset.touch;
+  });
+
+  window.HC = { odo, q, clamp, seg, lerp, ease, fmt, money, end99, round2, rng, PLANS, ITEMS, SONARA, catalog, makeRow, makeStore, put, run, touch };
 })();
 
 /* ===== top ===== */
@@ -301,8 +308,18 @@
   const hero = root.querySelector('.hero'), card = $('#top-card');
   const T_LIVE = T_B0;   // rows answer as soon as the beam appears
   let ptr = null, hovSlot = null, hovIdx = -1, cv = 0, cx = 0, cy = 0;
-  hero.addEventListener('pointermove', e => { ptr = { x: e.clientX, y: e.clientY }; });
-  hero.addEventListener('pointerleave', () => { ptr = null; });
+  // mouse and pen point; a finger taps. A tap on a row holds its card until the next tap or a scroll.
+  hero.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') ptr = { x: e.clientX, y: e.clientY }; });
+  hero.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') ptr = null; });
+  let tap = null;
+  hero.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') tap = { x: e.clientX, y: e.clientY, at: performance.now() }; });
+  hero.addEventListener('pointerup', e => {
+    if (e.pointerType !== 'touch' || !tap) return;
+    const still = Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 10 && performance.now() - tap.at < 600;
+    if (still) ptr = e.clientY > lineY() ? { x: e.clientX, y: e.clientY } : null;
+    tap = null;
+  });
+  addEventListener('scroll', () => { if (HC.touch) ptr = null; }, { passive: true });
   // done: the beam has crossed this row. Before that, a row whose cost rose still carries its old price.
   function cardHTML(r, done) {
     const moved = r.sonara && done;
@@ -342,12 +359,12 @@
   let user = 0, vel = 0, drag = null;
   const lineY = () => $('#top-hint').getBoundingClientRect().bottom + 8;
   hero.addEventListener('pointerdown', e => {
-    if ((e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('a, button') || e.clientY <= lineY()) return;
+    if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('a, button') || e.clientY <= lineY()) return;
     drag = { y: e.clientY, at: performance.now() }; vel = 0;
     hero.setPointerCapture(e.pointerId); hero.classList.add('dragging');
   });
   hero.addEventListener('pointermove', e => {
-    hero.classList.toggle('grab', !drag && e.clientY > lineY() && !e.target.closest('a, button'));
+    hero.classList.toggle('grab', e.pointerType !== 'touch' && !drag && e.clientY > lineY() && !e.target.closest('a, button'));
     if (!drag) return;
     const now = performance.now(), dy = (e.clientY - drag.y) * DRAG, dts = Math.max(0.001, (now - drag.at) / 1000);
     user += dy; vel = vel * 0.6 + (dy / dts) * 0.4; drag.y = e.clientY; drag.at = now;
@@ -577,8 +594,11 @@ window.WHY = (() => {
   // ---------- ask a price why ----------
   const T_LIVE = 0.9;
   let ptr = null, hov = null, hovKey = null, cv = 0, cx = 0, cy = 0;
-  sheet.addEventListener('pointermove', e => { ptr = { x: e.clientX, y: e.clientY }; });
-  sheet.addEventListener('pointerleave', () => { ptr = null; });
+  // mouse and pen point; a finger taps a price and its card stays until the next tap or a scroll
+  sheet.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') ptr = { x: e.clientX, y: e.clientY }; });
+  sheet.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') ptr = null; });
+  sheet.addEventListener('pointerup', e => { if (e.pointerType === 'touch') ptr = { x: e.clientX, y: e.clientY }; });
+  addEventListener('scroll', () => { if (HC.touch) ptr = null; }, { passive: true });
   function cardHTML(x, m) {
     const d = x.d, h = health(d, m);
     return '<div class="hd2"><div><b>Why ' + money(d.price) + '?</b><small>' + d.name + (d.variant ? ' · ' + d.variant : '') + '</small></div><div class="p"></div></div><ol>' +
@@ -921,7 +941,7 @@ window.PLAN = (() => {
         x.last = txt;
       }
       x.ch.className = 'ch ' + (Math.abs(d) < 0.005 ? 'eq' : d < 0 ? 'dn' : 'up');
-      x.ch.textContent = Math.abs(d) < 0.005 ? 'No change' : (d < 0 ? '−' : '+') + money(Math.abs(d)) + '  ' + (d < 0 ? '−' : '+') + Math.abs(d / x.s.now * 100).toFixed(1) + '%';
+      x.ch.innerHTML = Math.abs(d) < 0.005 ? 'No change' : '<span class="cd">' + (d < 0 ? '−' : '+') + money(Math.abs(d)) + ' </span>' + (d < 0 ? '−' : '+') + Math.abs(d / x.s.now * 100).toFixed(1) + '%';
     });
   }
   draw(false);
@@ -1004,7 +1024,8 @@ window.TOUR = [
   const { seg, ease, clamp, put } = HC;
   const $ = s => root.querySelector(s);
   const IMG = 'assets/img/screens/';
-  const N = TOUR.length, CW = 628;   // card width plus gap
+  const N = TOUR.length;
+  let CW = 628;   // card width plus gap, measured in layout()
 
   // two copies of the week, so the strip can drift forever
   for (let r = 0; r < 2; r++) TOUR.forEach((s, k) => {
@@ -1061,7 +1082,8 @@ window.TOUR = [
     const L = N * CW;
     put($('#how-track'), 'transform', `translateX(${(-(((x % L) + L) % L) - 300).toFixed(1)}px)`);
   }
-  HC.run({ root, render, duration: 20, name: '4bC · The Contact Sheet' });
+  function layout() { const c = $('#how-track').firstElementChild; CW = c.offsetWidth + parseFloat(getComputedStyle($('#how-track')).columnGap || 28); }
+  HC.run({ root, render, layout, duration: 20, name: '4bC · The Contact Sheet' });
 })();
 })(document.getElementById('how'));
 
@@ -1107,7 +1129,7 @@ window.RUN = (() => {
   $('#controls-bApprove').onclick = () => { touched = true; approveAt = curT; undoAt = null; };
   // undo keeps the run where it is and sends it back from there
   $('#controls-bUndo').onclick = () => { if (approveAt == null) approveAt = curT - curS + 1.2; touched = true; undoAt = curT; };
-  let curT = 0, curS = 0;
+  let curT = 0, curS = 0, followed = 0;
 
   function layout() {
     const cr = $('#controls-chain').getBoundingClientRect(), c0 = cols[0].querySelector('.card').getBoundingClientRect();
@@ -1162,10 +1184,14 @@ window.RUN = (() => {
     // the card the story is at is lit
     const at = u != null && u < 4.3 ? Math.round(3 * (1 - back)) : s < 1.4 ? 0 : s < 4.6 ? 1 : s < 6.4 ? 2 : 3;
     cols.forEach((c, k) => c.classList.toggle('lit', k === at && (s > 0.9 || u != null)));
-    const cr = $('#controls-chain').getBoundingClientRect();
+    const chain = $('#controls-chain'), cr = chain.getBoundingClientRect();
+    // on phones the row scrolls: follow the card the story is at, once the visitor has pressed a button
+    // after an undo the row rests on the first card, where Approve Plan is ready again
+    const follow = u != null && u >= 4.3 ? 0 : at;
+    if (follow !== followed) { followed = follow; if (approveAt != null && chain.scrollWidth > chain.clientWidth + 4) chain.scrollTo({ left: cols[follow].offsetLeft - cols[0].offsetLeft, behavior: 'smooth' }); }
     const aim = (el, btn, on) => {
       const r = btn.getBoundingClientRect();
-      put(el, 'left', (r.left - cr.left + r.width / 2).toFixed(1) + 'px');
+      put(el, 'left', (r.left - cr.left + chain.scrollLeft + r.width / 2).toFixed(1) + 'px');
       put(el, 'top', (r.bottom - cr.top + 10 + Math.sin(t * 5) * 5).toFixed(1) + 'px');
       put(el, 'opacity', on ? ease.out(seg(t, 1.2, 1.8)).toFixed(3) : '0');
     };
@@ -1226,6 +1252,7 @@ window.NEXT = [
   // list rows
   $('#smart-items').innerHTML = N.map(x => '<button type="button" class="it" role="option" data-id="' + x.id + '"><span class="fl"></span><div class="top"><span>' + x.src + '</span><time>' + x.when + '</time></div><b>' + x.title + '</b><span class="pl" data-pill></span></button>').join('');
   const rowEl = Object.fromEntries([...root.querySelectorAll('.it')].map(el => [el.dataset.id, el]));
+  let IH = 112;   // row height, measured in layout(): shorter on phones
 
   // state: what the visitor did to each draft. { did: 'approve' | 'dismiss', at, undoAt }
   const acts = {};
@@ -1293,7 +1320,7 @@ window.NEXT = [
       const el = rowEl[x.id], a = ARRIVE[x.id];
       const p = ease.out(seg(t, a, a + 0.45));
       const above = N.filter(y => ARRIVE[y.id] > a).reduce((s, y) => s + ease.inOut(seg(t, ARRIVE[y.id], ARRIVE[y.id] + 0.45)), 0);
-      put(el, 'transform', `translateY(${(above * 112 - (1 - p) * 16).toFixed(1)}px)`);
+      put(el, 'transform', `translateY(${(above * IH - (1 - p) * 16).toFixed(1)}px)`);
       put(el, 'opacity', p.toFixed(3));
       put(el, 'visibility', p > 0 ? 'visible' : 'hidden');
       put(el, '--new', (0.9 * (1 - seg(t, a + 0.3, a + 2.2))).toFixed(3));
@@ -1332,7 +1359,8 @@ window.NEXT = [
       put($('#smart-bnx'), 'opacity', seg(since, 1.1, 1.4).toFixed(3));
     }
   }
-  HC.run({ root, render, duration: 20, name: '7A · The Inbox' });
+  function layout() { IH = rowEl.feed.offsetHeight || 112; }
+  HC.run({ root, render, layout, duration: 20, name: '7A · The Inbox' });
 })();
 })(document.getElementById('smart'));
 
@@ -1461,5 +1489,12 @@ window.JOIN = (() => {
   const stick = document.getElementById('stick'), totop = document.getElementById('totop');
   totop.onclick = () => { scrollTo({ top: 0, behavior: 'smooth' }); history.replaceState(null, '', location.pathname); };
   const on = () => { stick.classList.toggle('solid', scrollY > 8); totop.classList.toggle('on', scrollY > innerHeight * 0.8); };
+  // the menu on narrow screens: opens the section links, closes on a pick, Escape or a tap outside
+  const menu = document.getElementById('menu');
+  const setOpen = v => { stick.classList.toggle('open', v); menu.setAttribute('aria-expanded', v); menu.setAttribute('aria-label', v ? 'Close menu' : 'Menu'); };
+  menu.onclick = () => setOpen(!stick.classList.contains('open'));
+  stick.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click', () => setOpen(false)));
+  addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+  document.addEventListener('pointerdown', e => { if (!stick.contains(e.target)) setOpen(false); });
   addEventListener('scroll', on, { passive: true }); on();
 })();
