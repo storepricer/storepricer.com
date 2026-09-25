@@ -96,6 +96,10 @@ a { color: inherit; }
 .odo-d > span { display: block; will-change: transform; }
 .odo-s { display: inline-block; }
 
+/* ---------- reduced motion (html.calm, set by the engine) ---------- */
+html.calm { scroll-behavior: auto !important; }
+html.calm *, html.calm *::before, html.calm *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
+
 /* ===== section.css ===== */
 /* Section concepts: shared context pieces. Tokens, buttons and the preview bar come from
    ../../hero-concepts/shared.css. */
@@ -785,6 +789,15 @@ a { color: inherit; }
 #waitlist .foot { padding: 44px 0 32px; }
 #waitlist .foot-bot { flex-direction: column-reverse; align-items: flex-start; gap: 16px; }
 }
+#waitlist .foot-r { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+#waitlist .motion { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; font: 600 13.5px var(--sans); color: var(--muted); cursor: pointer; }
+#waitlist .motion:hover { color: var(--ink); }
+#waitlist .motion:focus-visible { outline: 2px solid var(--copper); outline-offset: 3px; border-radius: 6px; }
+#waitlist .motion i { width: 34px; height: 20px; border-radius: 99px; background: var(--line-strong); position: relative; transition: background .25s; }
+#waitlist .motion i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 99px; background: #fff; transition: left .25s var(--ease); }
+#waitlist .motion[aria-checked="true"] { color: var(--ink); }
+#waitlist .motion[aria-checked="true"] i { background: var(--deep); }
+#waitlist .motion[aria-checked="true"] i::after { left: 17px; }
 
 /* ===== waitlist (docs/design/section-concepts/09-join/b-board-returns.html) ===== */
 #waitlist .close { background: #001c1a; padding-top: 110px; }
@@ -887,6 +900,15 @@ a { color: inherit; }
 #faq .foot { padding: 44px 0 32px; }
 #faq .foot-bot { flex-direction: column-reverse; align-items: flex-start; gap: 16px; }
 }
+#faq .foot-r { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+#faq .motion { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; font: 600 13.5px var(--sans); color: var(--muted); cursor: pointer; }
+#faq .motion:hover { color: var(--ink); }
+#faq .motion:focus-visible { outline: 2px solid var(--copper); outline-offset: 3px; border-radius: 6px; }
+#faq .motion i { width: 34px; height: 20px; border-radius: 99px; background: var(--line-strong); position: relative; transition: background .25s; }
+#faq .motion i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 99px; background: #fff; transition: left .25s var(--ease); }
+#faq .motion[aria-checked="true"] { color: var(--ink); }
+#faq .motion[aria-checked="true"] i { background: var(--deep); }
+#faq .motion[aria-checked="true"] i::after { left: 17px; }
 
 /* ===== faq (docs/design/section-concepts/10-faq/faq.html) ===== */
 #faq .tail.night { height: 90px; background: #001c1a; }
@@ -977,6 +999,15 @@ a { color: inherit; }
 #site-foot .foot { padding: 44px 0 32px; }
 #site-foot .foot-bot { flex-direction: column-reverse; align-items: flex-start; gap: 16px; }
 }
+#site-foot .foot-r { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+#site-foot .motion { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; font: 600 13.5px var(--sans); color: var(--muted); cursor: pointer; }
+#site-foot .motion:hover { color: var(--ink); }
+#site-foot .motion:focus-visible { outline: 2px solid var(--copper); outline-offset: 3px; border-radius: 6px; }
+#site-foot .motion i { width: 34px; height: 20px; border-radius: 99px; background: var(--line-strong); position: relative; transition: background .25s; }
+#site-foot .motion i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 99px; background: #fff; transition: left .25s var(--ease); }
+#site-foot .motion[aria-checked="true"] { color: var(--ink); }
+#site-foot .motion[aria-checked="true"] i { background: var(--deep); }
+#site-foot .motion[aria-checked="true"] i::after { left: 17px; }
 
 /* ===== the page: sticky nav, anchors, hero under the nav, back to top ===== */
 html { scroll-behavior: smooth; }

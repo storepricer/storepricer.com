@@ -175,6 +175,28 @@
     };
   }
 
+  // ---------- reduced motion ----------
+  // Calm follows the device's reduce-motion setting unless the visitor chose with the footer switch
+  // (remembered). Calm: every section opens already finished, nothing moves by itself, controls still work.
+  const MKEY = 'sp-motion', osCalm = matchMedia('(prefers-reduced-motion: reduce)'), onCalm = [];
+  let choice = null, calm = false;
+  try { choice = localStorage.getItem(MKEY); } catch (_) {}
+  function applyCalm() {
+    calm = q.get('calm') === '1' || (choice ? choice === 'reduce' : osCalm.matches);
+    document.documentElement.classList.toggle('calm', calm);
+    document.querySelectorAll('[data-motion]').forEach(b => b.setAttribute('aria-checked', calm));
+    onCalm.forEach(f => f(calm));
+  }
+  if (osCalm.addEventListener) osCalm.addEventListener('change', applyCalm);
+  document.addEventListener('click', e => {
+    if (!e.target.closest('[data-motion]')) return;
+    choice = calm ? 'full' : 'reduce';
+    try { localStorage.setItem(MKEY, choice); } catch (_) {}
+    applyCalm();
+  });
+  applyCalm();
+  const REST = 30;   // seconds: every section's intro and demo are over by then
+
   // ---------- the timeline ----------
   // run({ render, layout, duration, name, root }). With root (the assembled page), there is no preview bar:
   // the section's clock starts when it scrolls into view and pauses while it is off screen.
@@ -218,7 +240,7 @@
 
     function start() {
       if (layout) layout();
-      t0 = now(); started = true;
+      t0 = now() - (calm ? REST : 0); started = true;
       if (frozenAt !== null) { root.classList.add('frozen'); render(frozenAt); return; }
       raf = requestAnimationFrame(tick);
     }
@@ -245,7 +267,14 @@
     }
     if (!page) chrome();
     if (layout) layout();
-    render(frozenAt !== null ? frozenAt : 0);
+    // switched to calm while playing: jump to the finished state
+    onCalm.push(on => {
+      if (!on || frozenAt !== null) return;
+      if (!started) { render(REST); return; }
+      if (current() < REST) { if (playing) t0 = now() - REST; else tHeld = REST; }
+    });
+    applyCalm();   // a footer added after the engine loaded (the previews) gets its switch state
+    render(frozenAt !== null ? frozenAt : calm ? REST : 0);
     // Start once fonts are in, so the intro is not spent on fallback type
     const fontsIn = document.fonts ? document.fonts.ready : Promise.resolve();
     Promise.race([fontsIn, new Promise(r => setTimeout(r, 1500))]).then(startWhenSeen);
@@ -258,7 +287,7 @@
     if (n) n.textContent = el.dataset.touch;
   });
 
-  window.HC = { odo, q, clamp, seg, lerp, ease, fmt, money, end99, round2, rng, PLANS, ITEMS, SONARA, catalog, makeRow, makeStore, put, run, touch };
+  window.HC = { odo, q, clamp, seg, lerp, ease, fmt, money, end99, round2, rng, PLANS, ITEMS, SONARA, catalog, makeRow, makeStore, put, run, touch, get calm() { return calm; } };
 })();
 
 /* ===== top ===== */
@@ -274,7 +303,7 @@
   // ---------- timeline ----------
   const T_B0 = 2.0, T_B1 = 8.6;          // the beam crosses the floor
   const DRIFT = 22;                       // rows flow toward the viewer, px per second
-  const drift = t => t * DRIFT;
+  const drift = t => (HC.calm ? 30 : t) * DRIFT;   // calm: the floor stands still
   const beamPos = t => PLANE * ease.inOut(seg(t, T_B0, T_B1));  // distance from the near edge
   const G = t => beamPos(t) + drift(t);   // a row is crossed once G passes its centre
   function crossAt(i) {
@@ -379,7 +408,7 @@
     const dq = HC.q.get('drag'); if (dq) user = +dq;   // probe: ?drag=-3000 pulls the floor back   // replay or scrub
     const dt = lastT === null ? 0 : clamp(t - lastT, 0, 0.1); lastT = t;
     k += ((hovSlot ? CRAWL : 1) - k) * (1 - Math.exp(-dt * 3.2));
-    lag += (1 - k) * DRIFT * dt;
+    if (!HC.calm) lag += (1 - k) * DRIFT * dt;
     if (!drag) { user += vel * dt; vel *= Math.exp(-3.5 * dt); if (Math.abs(vel) < 2) vel = 0; }
     words.forEach((el, k) => { const p = ease.out4(seg(t, 0.1 + k * 0.09, 1.0 + k * 0.09)); put(el, 'transform', `translateY(${(1 - p) * 40}px)`); put(el, 'opacity', p.toFixed(3)); });
     fades.forEach((el, k) => { const p = ease.out(seg(t, 0.5 + k * 0.12, 1.3 + k * 0.12)); put(el, 'opacity', p.toFixed(3)); put(el, 'transform', `translateY(${(1 - p) * 14}px)`); });
@@ -394,7 +423,7 @@
     put(beam, 'opacity', (clamp(seg(t, T_B0 - 0.3, T_B0 + 0.2)) * (1 - seg(t, T_B1 - 0.4, T_B1 + 0.4))).toFixed(3));
 
     // an idle check pulse passes every nine seconds once the sweep is done
-    const cp = t > T_B1 + 2 ? ((t - T_B1 - 2) % 9) / 3.2 : 2;
+    const cp = !HC.calm && t > T_B1 + 2 ? ((t - T_B1 - 2) % 9) / 3.2 : 2;
     const checkY = PLANE - PLANE * clamp(cp);
     put(check, 'transform', `translateY(${checkY}px)`);
     put(check, 'opacity', cp < 1 ? (Math.sin(cp * Math.PI) * 0.9).toFixed(3) : '0');
@@ -767,7 +796,7 @@ window.LAD = (() => {
     const np = money(priceOf(p, win));
     if (np !== shownPrice) {
       const sp = priceEl.firstChild;
-      if (animate && shownPrice) {
+      if (animate && shownPrice && !HC.calm) {
         const old = sp.cloneNode(true); old.style.position = 'absolute'; priceEl.style.position = 'relative'; priceEl.appendChild(old);
         sp.textContent = np;
         old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-100%)', opacity: 0 }], { duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = () => old.remove();
@@ -801,14 +830,14 @@ window.LAD = (() => {
     curT = t;
     fades.forEach((el, k) => { const p = ease.out(seg(t, 0.05 + k * 0.1, 0.8 + k * 0.1)); put(el, 'opacity', p.toFixed(3)); put(el, 'transform', `translateY(${((1 - p) * 14).toFixed(1)}px)`); });
     // the demonstration: switch Custom off, then pin a price, then put it back
-    if (!touched) {
+    if (!touched && !HC.calm) {
       const wantCustom = !(t >= 3.4 && t < 8.2), wantPin = t >= 5.6 && t < 8.2;
       if (pi !== 5 || on.custom !== wantCustom || !!pinned[5] !== wantPin) {
         pi = 5; on.custom = wantCustom; if (wantPin) pinned[5] = pinPrice(PRODUCTS[5]); else delete pinned[5];
         update(!document.documentElement.classList.contains('frozen'));
       }
     }
-    wire(document.documentElement.classList.contains('frozen') ? 99 : t);
+    wire(document.documentElement.classList.contains('frozen') || HC.calm ? 99 : t);
     const c = counts({ fixed: true, custom: true, shared: true, base: true }), f = ease.out(seg(t, 0.8, 2.2));
     Object.keys(setC).forEach(k => setC[k](c[k] * f));
     put($('#ranking-hint'), 'opacity', ease.out(seg(t, 1, 1.6)).toFixed(3));
@@ -1077,7 +1106,7 @@ window.TOUR = [
     const dt = last == null ? 0 : clamp(t - last, 0, 0.1); last = t;
     speed += ((hover || cur >= 0 || drag ? 0.06 : 1) - speed) * (1 - Math.exp(-dt * 3.2));
     if (frozen) x = t * 38;
-    else if (!drag) { x += (38 * speed + vel) * dt; vel *= Math.exp(-dt * 3.5); if (Math.abs(vel) < 4) vel = 0; }
+    else if (!drag) { x += ((HC.calm ? 0 : 38 * speed) + vel) * dt; vel *= Math.exp(-dt * 3.5); if (Math.abs(vel) < 4) vel = 0; }
     // the track holds the week twice; keep a full copy spanning the screen at all times
     const L = N * CW;
     put($('#how-track'), 'transform', `translateX(${(-(((x % L) + L) % L) - 300).toFixed(1)}px)`);
@@ -1188,11 +1217,11 @@ window.RUN = (() => {
     // on phones the row scrolls: follow the card the story is at, once the visitor has pressed a button
     // after an undo the row rests on the first card, where Approve Plan is ready again
     const follow = u != null && u >= 4.3 ? 0 : at;
-    if (follow !== followed) { followed = follow; if (approveAt != null && chain.scrollWidth > chain.clientWidth + 4) chain.scrollTo({ left: cols[follow].offsetLeft - cols[0].offsetLeft, behavior: 'smooth' }); }
+    if (follow !== followed) { followed = follow; if (approveAt != null && chain.scrollWidth > chain.clientWidth + 4) chain.scrollTo({ left: cols[follow].offsetLeft - cols[0].offsetLeft, behavior: HC.calm ? 'auto' : 'smooth' }); }
     const aim = (el, btn, on) => {
       const r = btn.getBoundingClientRect();
       put(el, 'left', (r.left - cr.left + chain.scrollLeft + r.width / 2).toFixed(1) + 'px');
-      put(el, 'top', (r.bottom - cr.top + 10 + Math.sin(t * 5) * 5).toFixed(1) + 'px');
+      put(el, 'top', (r.bottom - cr.top + 10 + (HC.calm ? 0 : Math.sin(t * 5) * 5)).toFixed(1) + 'px');
       put(el, 'opacity', on ? ease.out(seg(t, 1.2, 1.8)).toFixed(3) : '0');
     };
     aim($('#controls-goA'), $('#controls-bApprove'), !$('#controls-bApprove').disabled);
@@ -1334,14 +1363,14 @@ window.NEXT = [
     // which item is open: follows arrivals, then cycles until the visitor opens one; pointing at the app holds it
     if (!touched) {
       if (t < ARRIVE.rival + 0.2) { const last = arrived[arrived.length - 1]; if (last) choose(last); cyc = 0; }
-      else { if (!hover) cyc += dt; choose(CYCLE[Math.floor(cyc / HOLD) % CYCLE.length]); }
+      else { if (!hover && !HC.calm) cyc += dt; choose(CYCLE[Math.floor(cyc / HOLD) % CYCLE.length]); }
     }
     if (!sel) { put($('#smart-pane'), 'html', '<div class="pane-in"><p class="body" style="margin-top:40px">New items appear here as they arrive.</p></div>'); return; }
     const st = status(sel, t), key = sel;
     if (paneKey !== key) { buildPane(sel); paneKey = key; }
     put($('#smart-foot'), 'html', footHTML(sel, st, t));
     Object.entries(rowEl).forEach(([id, el]) => { el.classList.toggle('sel', id === sel); el.setAttribute('aria-selected', id === sel); put(el, '--sel', id === sel ? '1' : '0'); });
-    const since = t - selAt;
+    const since = HC.calm ? 99 : t - selAt;
     put($('#smart-pin'), '--in', ease.out(seg(since, 0, 0.35)).toFixed(3));
     // the preview column rolls to the proposed values, one row after another
     rolls.forEach((el, k) => put(el, '--p', ease.inOut(seg(since, 0.45 + k * 0.18, 1.05 + k * 0.18)).toFixed(3)));
@@ -1414,11 +1443,12 @@ window.JOIN = (() => {
       <div><h3>StorePricer</h3><ul><li><a href="#waitlist">Join the waitlist</a></li><li><a href="https://whatsoever.ai">Whatsoever.ai</a></li></ul></div>
     </div>
     <div class="foot-bot"><span>© 2026 StorePricer · A <a href="https://whatsoever.ai">Whatsoever.ai</a> brand</span>
+      <div class="foot-r"><button class="motion" type="button" role="switch" aria-checked="false" data-motion>Reduce motion<i aria-hidden="true"></i></button>
       <nav class="social" aria-label="StorePricer on social media">
         <a href="#" aria-label="StorePricer on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
         <a href="#" aria-label="StorePricer on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
         <a href="#" aria-label="StorePricer on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
-      </nav></div>
+      </nav></div></div>
   </div>
 </footer>`;
   return { bind, SIZES, sizeOptions, FOOTER };
@@ -1451,8 +1481,8 @@ window.JOIN = (() => {
   function render(t) {
     fades.forEach((el, k) => { const p = ease.out(seg(t, 0.05 + k * 0.1, 0.8 + k * 0.1)); put(el, 'opacity', p.toFixed(3)); put(el, 'transform', `translateY(${((1 - p) * 14).toFixed(1)}px)`); });
     // the floor drifts toward the viewer; every 7s a check passes over it
-    const off = (t * 18) % LOOPH;
-    const cyc = (t - 1) % 7, on = t > 1 && cyc < 2.6, by = ease.inOut(Math.min(1, cyc / 2.6)) * 1500;
+    const off = ((HC.calm ? 30 : t) * 18) % LOOPH;
+    const cyc = (t - 1) % 7, on = !HC.calm && t > 1 && cyc < 2.6, by = ease.inOut(Math.min(1, cyc / 2.6)) * 1500;
     put($('#waitlist-beam'), 'opacity', on ? (Math.min(1, cyc / 0.3) * (1 - Math.max(0, (cyc - 2.3) / 0.3))).toFixed(3) : '0');
     put($('#waitlist-beam'), 'transform', `translateY(${by.toFixed(1)}px)`);
     els.forEach((el, k) => {
@@ -1487,7 +1517,7 @@ window.JOIN = (() => {
 /* ===== the page ===== */
 (function () {
   const stick = document.getElementById('stick'), totop = document.getElementById('totop');
-  totop.onclick = () => { scrollTo({ top: 0, behavior: 'smooth' }); history.replaceState(null, '', location.pathname); };
+  totop.onclick = () => { scrollTo({ top: 0, behavior: HC.calm ? 'auto' : 'smooth' }); history.replaceState(null, '', location.pathname); };
   const on = () => { stick.classList.toggle('solid', scrollY > 8); totop.classList.toggle('on', scrollY > innerHeight * 0.8); };
   // the menu on narrow screens: opens the section links, closes on a pick, Escape or a tap outside
   const menu = document.getElementById('menu');
