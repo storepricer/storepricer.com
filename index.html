@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400..800&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="assets/css/storepricer.css?v=b964e66db5">
+<link rel="stylesheet" href="assets/css/storepricer.css?v=c10c64f30b">
 </head>
 <body>
 <!-- Built by tools/assemble.py from the picked previews in docs/design. Edit those, then rebuild. -->
@@ -63,6 +63,26 @@
     <p class="fn fn-hero">Product names are used for illustration. Prices and costs are examples.</p>
   </section>
 </div>
+</div>
+<div class="part" id="film">
+<section class="film" aria-labelledby="film-s1b">
+  <div class="wrap center">
+    <h2 id="film-s1b" data-f>See it work in 30 seconds.</h2>
+    <p class="lede" data-f>One supplier raises its costs. Watch what StorePricer does with every price it touches.</p>
+  </div>
+  <div class="wrap">
+    <div class="frame idle" id="film-frame" data-f>
+      <video id="film-vid" muted playsinline preload="metadata" aria-describedby="film-vdesc"></video>
+      <button class="play" id="film-play" type="button" aria-label="Play the 30 second intro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg></button>
+    </div>
+    <div class="ctl" data-f>
+      <button class="btn btn-line-dark btn-sm" id="film-snd" type="button" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2 6h3l4-3v10L5 10H2z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6 6 0 0 1 0 9" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg><span>Sound on</span></button>
+      <button class="btn btn-line-dark btn-sm again" id="film-again" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v3h3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Play again</span></button>
+    </div>
+    <p class="sr" id="film-vdesc">A 30 second product tour with music. A store's catalog of 14,200 products is shown as a field of tiles. Sony raises its costs 6% and its products turn amber; StorePricer's rules update 2,318 prices with no approval needed. One product, Sony WH-1000XM4 headphones, shows how its Final Price is set: vendor cost $180.77, markup 38% to $249.46, ending in .99 at $249.99. A new Holiday Audio plan is previewed across 318 products and approved once, 1,204 prices go down, and the update lands on one receipt that can be undone. The catalog then forms the StorePricer mark: Every price on purpose. Join the waitlist at storepricer.com.</p>
+    <p class="fn">Product names are used for illustration. Prices and costs are examples.</p>
+  </div>
+</section>
 </div>
 <div class="part" id="why">
 <section class="sec" aria-labelledby="why-s2">
@@ -367,6 +387,6 @@
 </footer>
 </div>
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16V4M4.5 9.5 10 4l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-<script src="assets/js/storepricer.js?v=ca806d6fc7"></script>
+<script src="assets/js/storepricer.js?v=17eff0e376"></script>
 </body>
 </html>

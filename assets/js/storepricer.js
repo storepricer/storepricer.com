@@ -517,6 +517,56 @@
 })();
 })(document.getElementById('top'));
 
+/* ===== film ===== */
+(function (root) {
+(() => {
+  const { ease, seg, put } = HC;
+  const $ = s => root.querySelector(s);
+  const MEDIA = 'media/';
+  const v = $('#film-vid'), frame = $('#film-frame'), snd = $('#film-snd'), again = $('#film-again'), play = $('#film-play');
+  const phone = matchMedia('(max-width: 700px)');
+  let loaded = false, held = false;   // held: the visitor paused it, so scrolling back does not resume it
+
+  // the cut follows the frame: the 4:5 phone cut up to 700 px wide, the 16:9 master above
+  function load() {
+    const cut = phone.matches ? ['storepricer-intro-4x5.mp4', 'storepricer-intro-poster-4x5.jpg'] : ['storepricer-intro.mp4', 'storepricer-intro-poster.jpg'];
+    v.poster = MEDIA + cut[1]; v.src = MEDIA + cut[0]; loaded = true;   // preload stays 'metadata' until it plays
+  }
+  phone.addEventListener('change', () => { if (!loaded) return; load(); frame.classList.add('idle'); again.classList.remove('on'); });
+  const go = () => {
+    if (!loaded) load();
+    if (v.ended) v.currentTime = 0;
+    held = false; again.classList.remove('on');
+    v.play().then(() => frame.classList.remove('idle')).catch(() => frame.classList.add('idle'));
+  };
+  const label = () => { snd.setAttribute('aria-pressed', String(!v.muted)); snd.querySelector('span').textContent = v.muted ? 'Sound on' : 'Sound off'; };
+
+  // fetch it shortly before it scrolls in; play it muted once half of it is on screen, pause it off screen.
+  // It plays once and rests on the end card. Calm (reduced motion) never starts it by itself.
+  new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && !loaded) load(); }, { rootMargin: '600px 0px' }).observe(frame);
+  new IntersectionObserver(es => {
+    const e = es[es.length - 1];
+    if (e.intersectionRatio >= 0.5) { if (!HC.calm && !held && !v.ended && v.paused) go(); }
+    else if (!v.paused) v.pause();
+  }, { threshold: [0, 0.5] }).observe(frame);
+
+  play.onclick = e => { e.stopPropagation(); go(); };
+  frame.onclick = () => { if (v.paused) go(); else { v.pause(); held = true; frame.classList.add('idle'); } };
+  again.onclick = () => { if (!loaded) load(); v.currentTime = 0; go(); };
+  snd.onclick = () => { v.muted = !v.muted; if (!v.muted && (v.paused || v.ended)) go(); label(); };
+  v.addEventListener('ended', () => { again.classList.add('on'); });
+  label();
+
+  const fades = root.querySelectorAll('[data-f]');
+  HC.run({ root,
+    name: 'Section 1b: The Film', duration: 3,
+    render(t) {
+      fades.forEach((el, k) => { const p = ease.out(seg(t, 0.1 + k * 0.12, 0.9 + k * 0.12)); put(el, 'opacity', p.toFixed(3)); put(el, 'transform', `translateY(${((1 - p) * 16).toFixed(1)}px)`); });
+    },
+  });
+})();
+})(document.getElementById('film'));
+
 /* ===== docs/design/section-concepts/02-why/why-data.js ===== */
 /* Section 2 data: Northline Outfitters, an apparel store of 9,400 products, without StorePricer.
    Prices were set in a bulk edit on March 14. Vendors raised costs after that; the prices never followed.
