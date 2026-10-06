@@ -1049,49 +1049,49 @@ window.PLAN = (() => {
 /* Section 4b data: the real app screens, in the order of one week's work, with the notes
    pinned to each. Pin positions are percentages of the screen image (1920 by 1200). */
 window.TOUR = [
-  { id: 'dashboard', tab: 'Dashboard', title: 'Start every day with what needs you', img: 'dashboard.webp',
+  { id: 'dashboard', tab: 'Dashboard', title: 'Find the products that need attention', img: 'dashboard.webp',
     pins: [
       { x: 16, y: 50, t: '12,848 of 14,200 products are priced by a plan. The rest hold their Baseline price.' },
       { x: 52, y: 47, t: '44 need you: 3 were changed directly in Shopify and 41 have no cost on file.' },
       { x: 67, y: 78, t: '99.7% of products have a cost on file, so markups can apply.' },
     ] },
-  { id: 'newreview', tab: 'New plan', title: 'Check a new plan before it changes a single price', img: 'newreview.webp',
+  { id: 'newreview', tab: 'New plan', title: 'Check the prices a new plan would change', img: 'newreview.webp',
     pins: [
       { x: 16.4, y: 27, t: 'Nothing is priced until the plan is approved.' },
       { x: 89, y: 40, t: '1,204 prices would change. All of them go down.' },
       { x: 31, y: 62, t: 'The rule: vendor cost plus 30%, ending in .99.' },
       { x: 84, y: 95, t: 'Every product with its cost, today’s price and the plan’s price.' },
     ] },
-  { id: 'approvals', tab: 'Approvals', title: 'Approve new plans in one place', img: 'approvals.webp',
+  { id: 'approvals', tab: 'Approvals', title: 'Review new plans before they go live', img: 'approvals.webp',
     pins: [
       { x: 20, y: 25, t: 'Two new plans are waiting. New costs never wait here: prices follow them automatically.' },
       { x: 93, y: 44, t: 'Open a plan to check every price. Then approve or reject it.' },
       { x: 30, y: 78, t: 'Every approval is recorded with who approved it and when.' },
     ] },
-  { id: 'queued', tab: 'Queued prices', title: 'Watch approved prices go live', img: 'queued.webp',
+  { id: 'queued', tab: 'Queued prices', title: 'Review prices waiting to go live', img: 'queued.webp',
     pins: [
       { x: 30, y: 21, t: 'Jordan Lee approved Holiday Audio. Its prices go live on the next update. Or right away with Run Now.' },
       { x: 20, y: 37, t: '1,204 prices waiting to be sent to Shopify.' },
       { x: 93, y: 67, t: 'You can hold back any single price before it goes live.' },
     ] },
-  { id: 'update-automatic', tab: 'Price Update', title: 'Get a receipt for every update', img: 'update-automatic.webp',
+  { id: 'update-automatic', tab: 'Price Update', title: 'See what changed and what Shopify confirmed', img: 'update-automatic.webp',
     pins: [
       { x: 44, y: 12, t: 'Sony raised its costs 6%. 2,318 prices updated automatically. No approval needed.' },
       { x: 22, y: 27, t: 'Confirmed: every new price is live in Shopify.' },
       { x: 56, y: 50, t: 'What each price was and what it is now.' },
     ] },
-  { id: 'history', tab: 'Price History', title: 'Every change on record', img: 'history.webp',
+  { id: 'history', tab: 'Price History', title: 'Follow the history of your prices', img: 'history.webp',
     pins: [
       { x: 54, y: 22, t: 'Filter by price changes, new costs, plan changes and more.' },
       { x: 62, y: 37, t: 'Prices changed directly in Shopify are held for your review. Never overwritten.' },
       { x: 42, y: 95, t: 'New costs are recorded too.' },
     ] },
-  { id: 'addons', tab: 'Option add-ons', title: 'Price options once', img: 'addons.webp',
+  { id: 'addons', tab: 'Option add-ons', title: 'Set an option price across its combinations', img: 'addons.webp',
     pins: [
       { x: 18, y: 64, t: 'Set what each option adds: a mount, a protection plan.' },
       { x: 68, y: 53, t: 'See every combination it affects before you save.' },
     ] },
-  { id: 'undo', tab: 'Undo', title: 'Undo any change', img: 'undo.webp',
+  { id: 'undo', tab: 'Undo', title: 'Put back the prices from a selected change', img: 'undo.webp',
     pins: [
       { x: 74, y: 45, t: 'Undo a change from the plan’s history. The markup goes back to 30% and 1,204 prices change back.' },
     ] },
@@ -1240,7 +1240,7 @@ window.RUN = (() => {
     setSent(1204 * sendP * (1 - restored)); put($('#controls-qBar'), '--p', (sendP * (1 - restored)).toFixed(3));
     put($('#controls-qPill'), 'text', u != null && u > 1.4 ? 'Restored' : sendP >= 1 ? 'Sent' : sendP > 0 ? 'Sending' : 'Waiting');
     $('#controls-qPill').className = 'pl ' + (sendP >= 1 && u == null ? 'ok' : sendP > 0 ? 'cp' : '');
-    put($('#controls-qNote'), 'text', u != null && u > 1.4 ? '1,204 prices put back' : sendP >= 1 ? 'All 1,204 live together' : 'Starts the moment the plan is approved');
+    put($('#controls-qNote'), 'text', u != null && u > 1.4 ? '1,204 prices put back' : sendP >= 1 ? 'All 1,204 prices are live' : 'Starts the moment the plan is approved');
     setUpd(1204 * ease.out(seg(s, 5.2, 6.2)));
     const conf = s >= 6.2;
     put($('#controls-rRes'), 'text', u != null && u > 2.4 ? 'Undone' : conf ? 'Confirmed' : s > 5.2 ? 'Checking' : 'Waiting');
@@ -1487,9 +1487,9 @@ window.JOIN = (() => {
   <div class="wrap">
     <div class="foot-top">
       <div><a class="brand" href="#top"><svg aria-hidden="true"><use href="#mark"/></svg><b>StorePricer</b></a>
-        <p>Pricing rules for your online store. Preview, approve, and undo changes. Leverage your bottom line.</p>
+        <p>Pricing rules for large Shopify catalogs. Keep prices in step with supplier costs. Preview new plans and undo price updates.</p>
         <p class="for"><span>Built for</span><img src="assets/brand/shopify-logo.png" alt="Shopify" width="117" height="30"></p></div>
-      <div><h3>The product</h3><ul><li><a href="#ranking">Ranked Pricing</a></li><li><a href="#how">How it works</a></li><li><a href="#controls">Price Controls</a></li><li><a href="#smart">Smart Selling</a></li></ul></div>
+      <div><h3>The product</h3><ul><li><a href="#ranking">Pricing rules</a></li><li><a href="#how">Inside the app</a></li><li><a href="#controls">Approve and undo</a></li><li><a href="#smart">Smart Suggestions</a></li></ul></div>
       <div><h3>StorePricer</h3><ul><li><a href="#waitlist">Join the waitlist</a></li><li><a href="https://whatsoever.ai">Whatsoever.ai</a></li></ul></div>
     </div>
     <div class="foot-bot"><span>© 2026 StorePricer · A <a href="https://whatsoever.ai">Whatsoever.ai</a> brand</span>
